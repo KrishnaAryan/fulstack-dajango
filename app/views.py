@@ -9,13 +9,13 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
 # def home(request):
-#  return render(request, 'app/home.html')
+#  return render(request, 'app/index.html')
 class ProductView(View):
     def get(self, request):
         topwears=Product.objects.filter(category='TW')
         bottomwears=Product.objects.filter(category='BW')
         mobiles=Product.objects.filter(category='M')
-        return render(request, 'app/home.html',{'topwears':topwears, 'bottomwears':bottomwears,'mobiles':mobiles})
+        return render(request, 'app/index.html',{'topwears':topwears, 'bottomwears':bottomwears,'mobiles':mobiles})
 
 
 # def product_detail(request):
