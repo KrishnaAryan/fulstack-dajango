@@ -5,6 +5,8 @@ from .forms import *
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 # def home(request):
 #  return render(request, 'app/home.html')
@@ -121,6 +123,7 @@ def buy_now(request):
 # def profile(request):
 #  return render(request, 'app/profile.html')
 
+@method_decorator(login_required, name='dispatch')
 class ProfileView(View):
     def get(self, request):
         form= CustomerProfileForm()
@@ -143,7 +146,8 @@ def address(request):
     return render(request, 'app/address.html', {'add':add,'active':'btn-primary'})
 
 def orders(request):
- return render(request, 'app/orders.html')
+    op=OrderPlaced.objects.filter(user=request.user)
+    return render(request, 'app/orders.html', {'order_placed':op})
 
 def mobile(request, data=None):
     if data == None:
@@ -220,3 +224,14 @@ def checkout(request):
             amount +=tempamount
         totalamount=amount+shipping_amount
     return render(request, 'app/checkout.html',{'add':add, 'totalamount':totalamount, 'cart_items':cart_items ,"shipping_amount":shipping_amount},)
+@login_required
+def payment_done(request):
+    user=request.user
+    custid=request.GET.get('custid')
+    customer=Coustomer.objects.get(id=custid)
+    cart=Cart.objects.filter(user=user)
+    for c in cart:
+        OrderPlaced(user=user, customer=customer, product=c.product, quantity=c.quantity).save()
+        c.delete()
+    return redirect("orders")
+        
