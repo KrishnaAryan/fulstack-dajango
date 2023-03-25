@@ -23,16 +23,19 @@ class ProductView(View):
 class ProductDetails(View):
     def get(self, request, pk):
         product=Product.objects.get(pk=pk)
-        return render(request, 'app/productdetail.html', {'product':product} )
+        item_already_in_cart = False
+        if request.user.is_authenticated:
+            item_already_in_cart = Cart.objects.filter(Q(product=product.id) & Q(user=request.user)).exists()
+        return render(request, 'app/productdetail.html', {'product':product, 'item_already_in_cart':item_already_in_cart})
 
-
+@login_required
 def add_to_cart(request):
     user= request.user
     product_id=request.GET.get('prod_id')
     product=Product.objects.get(id=product_id)
     Cart(user=user, product=product).save()
     return redirect('/cart')
-
+@login_required
 def show_cart(request):
     if request.user.is_authenticated:
         user=request.user
@@ -52,7 +55,7 @@ def show_cart(request):
             return render(request, 'app/addtocart.html', {'carts':cart, 'totalamount':totalamount, 'amount':amount,'shipping_amount':shipping_amount})
         else:
             return render(request, 'app/emptycart.html')
-
+@login_required
 def plus_cart(request):
     if request.method=='GET':
         prod_id=request.GET['prod_id']
@@ -74,6 +77,7 @@ def plus_cart(request):
             'totalamount':amount+shipping_amount
         }
         return JsonResponse(data)
+@login_required
 def minus_cart(request):
     if request.method=='GET':
         prod_id=request.GET['prod_id']
@@ -95,6 +99,7 @@ def minus_cart(request):
             'totalamount':amount+shipping_amount
         }
         return JsonResponse(data)
+@login_required
 def remove_cart(request):
     if request.method=='GET':
         prod_id=request.GET['prod_id']
@@ -116,7 +121,7 @@ def remove_cart(request):
             'totalamount':amount+shipping_amount
         }
         return JsonResponse(data)
-
+@login_required
 def buy_now(request):
  return render(request, 'app/buynow.html')
 
@@ -141,10 +146,11 @@ class ProfileView(View):
             reg.save()
             messages.success(request, 'Congratulations!! Profile Update Successfully')
         return render(request, 'app/profile.html',{'form':form, 'active':'btn-primary'})
+@login_required
 def address(request):
     add=Coustomer.objects.filter(user=request.user)
     return render(request, 'app/address.html', {'add':add,'active':'btn-primary'})
-
+@login_required
 def orders(request):
     op=OrderPlaced.objects.filter(user=request.user)
     return render(request, 'app/orders.html', {'order_placed':op})
@@ -209,7 +215,7 @@ class CustomerRegistrationFormView(View):
             messages.success(request, 'Congratulation!! Registered Successfully')
             form.save()
         return render(request, 'app/customerregistration.html',{'form':form})
-        
+@login_required      
 def checkout(request):
     user=request.user
     add=Coustomer.objects.filter(user=user)
